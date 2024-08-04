@@ -52,20 +52,14 @@ const Chat = ({ route, navigation }) => {
 
     return (
         <View style={styles.container}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.container}
-                keyboardVerticalOffset={100}
-            >
-                <GiftedChat
-                    messages={messages}
-                    renderBubble={renderBubble}
-                    onSend={messages => onSend(messages)}
-                    user={{
-                        _id: 1
-                    }}
-                />
-            </KeyboardAvoidingView>
+            <GiftedChat
+                messages={messages}
+                renderBubble={renderBubble}
+                onSend={messages => onSend(messages)}
+                user={{
+                    _id: 1
+                }}
+            />
         </View>
     );
 };

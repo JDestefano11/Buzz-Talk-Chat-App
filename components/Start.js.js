@@ -15,8 +15,9 @@ const Start = ({ navigation }) => {
             style={[styles.background, { backgroundColor: bgColor }]}
         >
             <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={{ flex: 1 }}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={styles.container}
+                keyboardVerticalOffset={100}
             >
                 <View style={styles.container}>
                     <Text>Welcome to the Chat App</Text>
@@ -46,7 +47,6 @@ const Start = ({ navigation }) => {
         </ImageBackground>
     );
 };
-
 
 const styles = StyleSheet.create({
     background: {
