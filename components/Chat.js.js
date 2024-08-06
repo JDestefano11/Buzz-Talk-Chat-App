@@ -1,13 +1,20 @@
 import { useState, useEffect } from "react";
 import { StyleSheet, View } from 'react-native';
-import { GiftedChat, Bubble } from "react-native-gifted-chat";
+import { GiftedChat, Bubble, InputToolbar } from "react-native-gifted-chat";
 import { collection, query, orderBy, onSnapshot, addDoc } from "firebase/firestore";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
-const Chat = ({ route, navigation, db }) => {
+const Chat = ({ route, navigation, db, isConnected }) => {
     const { name, userId } = route.params;
     const [messages, setMessages] = useState([]);
+
+
+    const renderInputToolbar = (props) => {
+        if (isConnected) return <InputToolbar {...props} />;
+        else return null;
+    };
+
 
     // Cache messages function
     const cacheMessages = async (messagesToCache) => {
@@ -91,6 +98,7 @@ const Chat = ({ route, navigation, db }) => {
             <GiftedChat
                 messages={messages}
                 renderBubble={renderBubble}
+                renderInputToolbar={renderInputToolbar}
                 onSend={messages => onSend(messages)}
                 user={{
                     _id: userId,
