@@ -4,8 +4,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { useNetinfo } from "@react-native-community/netinfo";
+import { useNetInfo } from "@react-native-community/netinfo";
 import { disableNetwork, enableNetwork } from "firebase/firestore";
+import { useEffect } from 'react';
 
 const Stack = createNativeStackNavigator();
 
@@ -22,7 +23,7 @@ const App = () => {
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  const netInfo = useNetinfo();
+  const netInfo = useNetInfo();
 
   useEffect(() => {
     if (netInfo.isConnected === false) {
