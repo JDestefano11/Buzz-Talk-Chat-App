@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
-import { StyleSheet, View, KeyboardAvoidingView, Platform } from 'react-native';
-import { GiftedChat, Bubble } from "react-native-gifted-chat";
 
-const Chat = ({ route, navigation }) => {
-    const { name } = route.params;
+import { useState, useEffect } from "react";
+import { StyleSheet, View } from 'react-native';
+import { GiftedChat, Bubble } from "react-native-gifted-chat";
+import { collection, query, orderBy, onSnapshot, addDoc } from "firebase/firestore";
+
+const Chat = ({ route, navigation, db }) => {
+    const { name, userId } = route.params;
     const [messages, setMessages] = useState([]);
 
     const renderBubble = (props) => {
@@ -20,34 +22,27 @@ const Chat = ({ route, navigation }) => {
         />
     }
 
-
     const onSend = (newMessages) => {
-        setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages))
+        addDoc(collection(db, "messages"), newMessages[0]);
     }
 
     useEffect(() => {
-        setMessages([
-            {
-                _id: 1,
-                text: "Hello developer",
-                createdAt: new Date(),
-                user: {
-                    _id: 2,
-                    name: "React Native",
-                    avatar: "https://placeimg.com/140/140/any",
-                },
-            },
-            {
-                _id: 2,
-                text: "This is a system message",
-                createdAt: new Date(),
-                system: true,
-            }
-        ]);
-    }, []);
+        navigation.setOptions({ title: name });
 
-    useEffect(() => {
-        navigation.setOptions({ title: name })
+        const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            setMessages(
+                snapshot.docs.map(doc => ({
+                    _id: doc.id,
+                    createdAt: doc.data().createdAt.toDate(),
+                    text: doc.data().text,
+                    user: doc.data().user
+                }))
+            );
+        });
+
+        return () => unsubscribe();
     }, []);
 
     return (
@@ -57,7 +52,8 @@ const Chat = ({ route, navigation }) => {
                 renderBubble={renderBubble}
                 onSend={messages => onSend(messages)}
                 user={{
-                    _id: 1
+                    _id: userId,
+                    name: name
                 }}
             />
         </View>

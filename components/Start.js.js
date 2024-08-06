@@ -1,13 +1,28 @@
 import React, { useState } from "react";
 import { StyleSheet, View, Text, TextInput, ImageBackground, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
-
+import { getAuth, signInAnonymously } from "firebase/auth";
 
 const Start = ({ navigation }) => {
     const [name, setName] = useState("");
     const [bgColor, setBgColor] = useState("");
+    const auth = getAuth();
 
     const colors = ["#FF6347", "#4682B4", "#32CD32", "#FFD700"];
 
+    const signInUser = () => {
+        signInAnonymously(auth)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                navigation.navigate("Chat", {
+                    userId: user.uid,
+                    name: name,
+                    bgColor: bgColor,
+                });
+            })
+            .catch((error) => {
+                console.log(error.message);
+            });
+    };
 
     return (
         <ImageBackground
@@ -38,7 +53,7 @@ const Start = ({ navigation }) => {
                     </View>
                     <TouchableOpacity
                         style={styles.button}
-                        onPress={() => navigation.navigate('Chat', { name: name, bgColor: bgColor })}
+                        onPress={signInUser}
                     >
                         <Text style={styles.buttonText}>Go to Chat</Text>
                     </TouchableOpacity>
