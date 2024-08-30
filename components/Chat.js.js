@@ -1,10 +1,41 @@
 import { useState, useEffect } from "react";
-import { StyleSheet, View, KeyboardAvoidingView, Platform } from 'react-native';
-import { GiftedChat, Bubble } from "react-native-gifted-chat";
+import { StyleSheet, View } from 'react-native';
+import { GiftedChat, Bubble, InputToolbar } from "react-native-gifted-chat";
+import { collection, query, orderBy, onSnapshot, addDoc } from "firebase/firestore";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const Chat = ({ route, navigation }) => {
-    const { name } = route.params;
+
+const Chat = ({ route, navigation, db, isConnected }) => {
+    const { name, userId } = route.params;
     const [messages, setMessages] = useState([]);
+
+
+    const renderInputToolbar = (props) => {
+        if (isConnected) return <InputToolbar {...props} />;
+        else return null;
+    };
+
+
+    // Cache messages function
+    const cacheMessages = async (messagesToCache) => {
+        try {
+            await AsyncStorage.setItem("messages", JSON.stringify(messagesToCache));
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    // Load cached messages function
+    const loadCachedMessages = async () => {
+        try {
+            const cachedMessages = await AsyncStorage.getItem("messages");
+            if (cachedMessages !== null) {
+                setMessages(JSON.parse(cachedMessages));
+            }
+        } catch (error) {
+            console.log('Error loading cached messages', error.message);
+        }
+    };
 
     const renderBubble = (props) => {
         return <Bubble
@@ -20,44 +51,58 @@ const Chat = ({ route, navigation }) => {
         />
     }
 
-
     const onSend = (newMessages) => {
-        setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages))
+        if (isConnected) {
+            // If online, send to Firestore and cache
+            addDoc(collection(db, "messages"), newMessages[0]);
+        } else {
+            // If offline, cache locally
+            setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages));
+            cacheMessages([...messages, ...newMessages]);
+        }
     }
 
     useEffect(() => {
-        setMessages([
-            {
-                _id: 1,
-                text: "Hello developer",
-                createdAt: new Date(),
-                user: {
-                    _id: 2,
-                    name: "React Native",
-                    avatar: "https://placeimg.com/140/140/any",
-                },
-            },
-            {
-                _id: 2,
-                text: "This is a system message",
-                createdAt: new Date(),
-                system: true,
-            }
-        ]);
-    }, []);
+        navigation.setOptions({ title: name });
 
-    useEffect(() => {
-        navigation.setOptions({ title: name })
-    }, []);
+        let unsubscribe;
+        if (isConnected === true) {
+            // If online, fetch from Firestore and cache
+            const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                const messagesFirestore = snapshot.docs.map(doc => ({
+                    _id: doc.id,
+                    createdAt: doc.data().createdAt.toDate(),
+                    text: doc.data().text,
+                    user: doc.data().user
+                }));
+                cacheMessages(messagesFirestore);
+                setMessages(messagesFirestore);
+            });
+        } else {
+            // If offline, load from AsyncStorage
+            loadCachedMessages();
+        }
+
+        // Clean up code
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
+    }, [isConnected]);
+
+
+
 
     return (
         <View style={styles.container}>
             <GiftedChat
                 messages={messages}
                 renderBubble={renderBubble}
+                renderInputToolbar={renderInputToolbar}
                 onSend={messages => onSend(messages)}
                 user={{
-                    _id: 1
+                    _id: userId,
+                    name: name
                 }}
             />
         </View>
