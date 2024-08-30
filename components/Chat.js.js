@@ -4,6 +4,8 @@ import { GiftedChat, Bubble, InputToolbar } from "react-native-gifted-chat";
 import { collection, query, orderBy, onSnapshot, addDoc } from "firebase/firestore";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomActions from './CustomActions';
+import MapView from 'react-native-maps';
+
 
 const Chat = ({ route, navigation, db, storage, isConnected }) => {
     const { name, userId } = route.params;
@@ -47,14 +49,41 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
         />
     };
 
-    const onSend = (newMessages) => {
+    const onSend = (newMessages = []) => {
         if (isConnected) {
-            addDoc(collection(db, "messages"), newMessages[0]);
+            const message = newMessages[0];
+            addDoc(collection(db, "messages"), {
+                ...message,
+                createdAt: new Date(),
+                user: {
+                    _id: userId,
+                    name: name
+                },
+                location: message.location || null
+            });
         } else {
             setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages));
             cacheMessages([...messages, ...newMessages]);
         }
     };
+    const renderCustomView = (props) => {
+        const { currentMessage } = props;
+        if (currentMessage.location) {
+            return (
+                <MapView
+                    style={{ width: 150, height: 100, borderRadius: 13, margin: 3 }}
+                    region={{
+                        latitude: currentMessage.location.latitude,
+                        longitude: currentMessage.location.longitude,
+                        latitudeDelta: 0.0922,
+                        longitudeDelta: 0.0421,
+                    }}
+                />
+            );
+        }
+        return null;
+    };
+
 
     useEffect(() => {
         navigation.setOptions({ title: name });
@@ -67,8 +96,11 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
                     _id: doc.id,
                     createdAt: doc.data().createdAt.toDate(),
                     text: doc.data().text,
-                    user: doc.data().user
+                    user: doc.data().user,
+                    image: doc.data().image,
+                    location: doc.data().location || null
                 }));
+
                 cacheMessages(messagesFirestore);
                 setMessages(messagesFirestore);
             });
@@ -87,6 +119,7 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
                 messages={messages}
                 renderBubble={renderBubble}
                 renderInputToolbar={renderInputToolbar}
+                renderCustomView={renderCustomView}
                 renderActions={(props) => <CustomActions {...props} storage={storage} onSend={onSend} />}
                 onSend={messages => onSend(messages)}
                 user={{

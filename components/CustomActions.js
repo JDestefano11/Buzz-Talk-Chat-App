@@ -2,6 +2,7 @@ import React from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const CustomActions = ({ onSend, storage }) => {
@@ -77,7 +78,18 @@ const CustomActions = ({ onSend, storage }) => {
     };
 
     const getLocation = async () => {
-        // Implement location sharing functionality
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+            const result = await Location.getCurrentPositionAsync({});
+            if (result) {
+                onSend([{
+                    location: {
+                        longitude: result.coords.longitude,
+                        latitude: result.coords.latitude,
+                    },
+                }]);
+            }
+        }
     };
 
     const generateReference = (uri) => {
@@ -87,7 +99,13 @@ const CustomActions = ({ onSend, storage }) => {
     };
 
     return (
-        <TouchableOpacity style={styles.container} onPress={onActionPress}>
+        <TouchableOpacity
+            style={styles.container}
+            onPress={onActionPress}
+            accessible={true}
+            accessibilityLabel="More options"
+            accessibilityHint="Let's you choose to send an image or your location."
+        >
             <View style={styles.wrapper}>
                 <Text style={styles.iconText}>+</Text>
             </View>
