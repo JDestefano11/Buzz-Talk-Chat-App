@@ -7,6 +7,7 @@ import { getFirestore } from "firebase/firestore";
 import { useNetInfo } from "@react-native-community/netinfo";
 import { disableNetwork, enableNetwork } from "firebase/firestore";
 import { useEffect } from 'react';
+import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 
 const Stack = createNativeStackNavigator();
 
@@ -35,14 +36,16 @@ const App = () => {
 
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName='Start'>
-        <Stack.Screen name="Start" component={Start} />
-        <Stack.Screen name="Chat">
-          {props => <Chat db={db} isConnected={netInfo.isConnected} {...props} />}
-        </Stack.Screen>
-      </Stack.Navigator>
-    </NavigationContainer>
+    <ActionSheetProvider>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName='Start'>
+          <Stack.Screen name="Start" component={Start} />
+          <Stack.Screen name="Chat">
+            {props => <Chat db={db} isConnected={netInfo.isConnected} {...props} />}
+          </Stack.Screen>
+        </Stack.Navigator>
+      </NavigationContainer>
+    </ActionSheetProvider>
   );
 }
 
