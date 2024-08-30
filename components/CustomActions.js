@@ -56,7 +56,24 @@ const CustomActions = ({ onSend, storage }) => {
     };
 
     const takePhoto = async () => {
-        // Implement photo taking functionality
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status === 'granted') {
+            let result = await ImagePicker.launchCameraAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            });
+
+            if (!result.canceled) {
+                const imageUri = result.assets[0].uri;
+                const uniqueRefString = generateReference(imageUri);
+                const response = await fetch(imageUri);
+                const blob = await response.blob();
+                const newUploadRef = ref(storage, uniqueRefString);
+                uploadBytes(newUploadRef, blob).then(async (snapshot) => {
+                    const imageURL = await getDownloadURL(snapshot.ref);
+                    onSend({ image: imageURL });
+                });
+            }
+        }
     };
 
     const getLocation = async () => {
