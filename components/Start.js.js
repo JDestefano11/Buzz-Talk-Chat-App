@@ -1,72 +1,79 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Text, TextInput, ImageBackground, TouchableOpacity, KeyboardAvoidingView, Platform, SafeAreaView } from "react-native";
+import { StyleSheet, View, Text, TextInput, ImageBackground, TouchableOpacity, KeyboardAvoidingView, Platform, SafeAreaView, Alert } from "react-native";
 import { getAuth, signInAnonymously } from "firebase/auth";
 import { StatusBar } from 'expo-status-bar';
 
 const Start = ({ navigation }) => {
     const [name, setName] = useState("");
-    const [bgColor, setBgColor] = useState("#090C08");
+    const [bgColor, setBgColor] = useState("#1E1E1E");
+    const [errorMessage, setErrorMessage] = useState("");
     const auth = getAuth();
 
-    const colors = ["#090C08", "#474056", "#8A95A5", "#B9C6AE"];
+    const colors = ["#1E1E1E", "#2C2C2C", "#4A90E2", "#EAEAEA"];
 
     const signInUser = () => {
+        if (name.trim() === "") {
+            setErrorMessage("Please enter your name");
+            return;
+        }
+
         signInAnonymously(auth)
             .then((userCredential) => {
+                Alert.alert("Success", "You've successfully signed in!");
                 navigation.navigate("Chat", {
                     userId: userCredential.user.uid,
-                    name: name.trim() || "Anonymous",
+                    name: name.trim(),
                     bgColor: bgColor,
                 });
             })
             .catch((error) => {
                 console.error("Error signing in:", error.message);
+                setErrorMessage("An error occurred while signing in. Please try again.");
             });
     };
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
             <StatusBar style="light" />
-            <ImageBackground
-                source={require('../assets/splash.png')}
-                style={styles.background}
+            <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={styles.container}
             >
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    style={styles.container}
-                >
-                    <View style={styles.innerContainer}>
-                        <Text style={styles.title}>Welcome to Chat App</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Your Name"
-                            placeholderTextColor="#757083"
-                            value={name}
-                            onChangeText={setName}
-                        />
-                        <Text style={styles.chooseColorText}>Choose Background Color:</Text>
-                        <View style={styles.colorPicker}>
-                            {colors.map((color) => (
-                                <TouchableOpacity
-                                    key={color}
-                                    style={[
-                                        styles.colorCircle,
-                                        { backgroundColor: color },
-                                        bgColor === color && styles.selectedColor
-                                    ]}
-                                    onPress={() => setBgColor(color)}
-                                />
-                            ))}
-                        </View>
-                        <TouchableOpacity
-                            style={styles.button}
-                            onPress={signInUser}
-                        >
-                            <Text style={styles.buttonText}>Start Chatting</Text>
-                        </TouchableOpacity>
+                <View style={styles.innerContainer}>
+                    <Text style={styles.title}>Welcome to BuzzTalk</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Your Name"
+                        placeholderTextColor="#2C2C2C"
+                        value={name}
+                        onChangeText={(text) => {
+                            setName(text);
+                            setErrorMessage("");
+                        }}
+                    />
+                    {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+                    <Text style={styles.chooseColorText}>Choose Your Chat Theme:</Text>
+                    <View style={styles.colorPicker}>
+                        {colors.map((color) => (
+                            <TouchableOpacity
+                                key={color}
+                                style={[
+                                    styles.colorCircle,
+                                    { backgroundColor: color },
+                                    bgColor === color && styles.selectedColor
+                                ]}
+                                onPress={() => setBgColor(color)}
+                            />
+                        ))}
                     </View>
-                </KeyboardAvoidingView>
-            </ImageBackground>
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={signInUser}
+                    >
+                        <Text style={styles.buttonText}>Start Chatting</Text>
+                    </TouchableOpacity>
+                </View>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 };
@@ -75,11 +82,6 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
     },
-    background: {
-        flex: 1,
-        resizeMode: 'cover',
-        justifyContent: 'center',
-    },
     container: {
         flex: 1,
         justifyContent: 'center',
@@ -87,34 +89,44 @@ const styles = StyleSheet.create({
     },
     innerContainer: {
         width: '88%',
-        backgroundColor: 'white',
+        backgroundColor: 'rgba(234, 234, 234, 0.9)',
         padding: 20,
-        borderRadius: 10,
+        borderRadius: 15,
         alignItems: 'center',
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
     },
     title: {
-        fontSize: 28,
-        fontWeight: '600',
-        color: '#090C08',
+        fontSize: 32,
+        fontWeight: '700',
+        color: '#1E1E1E',
         marginBottom: 30,
+        textAlign: 'center',
     },
     input: {
         height: 50,
         width: '100%',
-        borderColor: '#757083',
+        borderColor: '#2C2C2C',
         borderWidth: 1,
-        borderRadius: 5,
+        borderRadius: 8,
         padding: 10,
         marginBottom: 20,
         fontSize: 16,
-        fontWeight: '300',
-        color: '#757083',
+        fontWeight: '400',
+        color: '#1E1E1E',
+        backgroundColor: '#EAEAEA',
     },
     chooseColorText: {
-        fontSize: 16,
-        fontWeight: '300',
-        color: '#757083',
-        marginBottom: 10,
+        fontSize: 18,
+        fontWeight: '500',
+        color: '#1E1E1E',
+        marginBottom: 15,
     },
     colorPicker: {
         flexDirection: 'row',
@@ -123,25 +135,32 @@ const styles = StyleSheet.create({
         marginBottom: 30,
     },
     colorCircle: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        borderWidth: 2,
+        borderColor: '#2C2C2C',
     },
     selectedColor: {
-        borderWidth: 2,
-        borderColor: '#757083',
+        borderWidth: 3,
+        borderColor: '#4A90E2',
     },
     button: {
-        backgroundColor: '#757083',
+        backgroundColor: '#4A90E2',
         padding: 15,
-        borderRadius: 5,
+        borderRadius: 8,
         width: '100%',
     },
     buttonText: {
-        color: 'white',
-        fontSize: 16,
+        color: '#FFFFFF',
+        fontSize: 18,
         fontWeight: '600',
         textAlign: 'center',
+    },
+    errorText: {
+        color: '#4A90E2',
+        fontSize: 14,
+        marginBottom: 10,
     },
 });
 
