@@ -13,12 +13,12 @@ const Stack = createNativeStackNavigator();
 
 const App = () => {
   const firebaseConfig = {
-    apiKey: "AIzaSyAms6BJfTk4kFHL0IiO-w9HEpYlxIN3yHg",
-    authDomain: "chat-868cd.firebaseapp.com",
-    projectId: "chat-868cd",
-    storageBucket: "chat-868cd.appspot.com",
-    messagingSenderId: "283916649578",
-    appId: "1:283916649578:web:34da2782ffe5096f23b613"
+    apiKey: "AIzaSyBJLrSWBm_mefZTjDjope6kE-bhbKmDXtI",
+    authDomain: "project-e73d1.firebaseapp.com",
+    projectId: "project-e73d1",
+    storageBucket: "project-e73d1.appspot.com",
+    messagingSenderId: "180389154192",
+    appId: "1:180389154192:web:cb52fa25326f2c9e15b715"
   };
 
   const app = initializeApp(firebaseConfig);
