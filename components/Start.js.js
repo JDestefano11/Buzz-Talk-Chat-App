@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, SafeAreaView, Alert } from "react-native";
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, SafeAreaView, Alert, ImageBackground } from "react-native";
 import { getAuth, signInAnonymously } from "firebase/auth";
 import { StatusBar } from 'expo-status-bar';
 
@@ -9,7 +9,7 @@ const Start = ({ navigation }) => {
     const [errorMessage, setErrorMessage] = useState("");
     const auth = getAuth();
 
-    const colors = ["#1E1E1E", "#2C2C2C", "#4A90E2", "#EAEAEA"];
+    const colors = ["#121212", "#1F1F1F", "#333333", "#BB86FC"];
 
     const signInUser = () => {
         if (name.trim() === "") {
@@ -33,54 +33,67 @@ const Start = ({ navigation }) => {
     };
 
     return (
-        <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
-            <StatusBar style="light" />
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.container}
-            >
-                <View style={styles.innerContainer}>
-                    <Text style={styles.title}>Welcome to BuzzTalk</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Your Name"
-                        placeholderTextColor="#2C2C2C"
-                        value={name}
-                        onChangeText={(text) => {
-                            setName(text);
-                            setErrorMessage("");
-                        }}
-                    />
-                    {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-                    <Text style={styles.chooseColorText}>Choose Your Chat Theme:</Text>
-                    <View style={styles.colorPicker}>
-                        {colors.map((color) => (
-                            <TouchableOpacity
-                                key={color}
-                                style={[
-                                    styles.colorCircle,
-                                    { backgroundColor: color },
-                                    bgColor === color && styles.selectedColor
-                                ]}
-                                onPress={() => setBgColor(color)}
-                            />
-                        ))}
+        <ImageBackground
+            source={require('../assets/backgroundimage.png')}
+            style={[styles.backgroundImage, { backgroundColor: bgColor }]}
+            imageStyle={{ opacity: 0.5 }}
+        >
+            <SafeAreaView style={styles.safeArea}>
+                <StatusBar style="light" />
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    style={styles.container}
+                >
+                    <View style={styles.innerContainer}>
+                        <Text style={styles.title}>Welcome to BuzzTalk</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Your Name"
+                            placeholderTextColor="#E0E0E0"
+                            value={name}
+                            onChangeText={(text) => {
+                                setName(text);
+                                setErrorMessage("");
+                            }}
+                        />
+                        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+                        <Text style={styles.chooseColorText}>Choose Your Chat Theme:</Text>
+                        <View style={styles.colorPicker}>
+                            {colors.map((color) => (
+                                <TouchableOpacity
+                                    key={color}
+                                    style={[
+                                        styles.colorCircle,
+                                        { backgroundColor: color },
+                                        bgColor === color && styles.selectedColor
+                                    ]}
+                                    onPress={() => setBgColor(color)}
+                                />
+                            ))}
+                        </View>
+                        <TouchableOpacity
+                            style={styles.button}
+                            onPress={signInUser}
+                        >
+                            <Text style={styles.buttonText}>Start Chatting</Text>
+                        </TouchableOpacity>
                     </View>
-                    <TouchableOpacity
-                        style={styles.button}
-                        onPress={signInUser}
-                    >
-                        <Text style={styles.buttonText}>Start Chatting</Text>
-                    </TouchableOpacity>
-                </View>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
+                </KeyboardAvoidingView>
+            </SafeAreaView>
+        </ImageBackground>
     );
 };
 
 const styles = StyleSheet.create({
+    backgroundImage: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+    },
     safeArea: {
         flex: 1,
+        backgroundColor: 'rgba(18, 18, 18, 0.6)',
     },
     container: {
         flex: 1,
@@ -89,7 +102,7 @@ const styles = StyleSheet.create({
     },
     innerContainer: {
         width: '88%',
-        backgroundColor: 'rgba(234, 234, 234, 0.9)',
+        backgroundColor: 'rgba(31, 31, 31, 0.8)',
         padding: 20,
         borderRadius: 15,
         alignItems: 'center',
@@ -105,27 +118,27 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 32,
         fontWeight: '700',
-        color: '#1E1E1E',
+        color: '#E0E0E0',
         marginBottom: 30,
         textAlign: 'center',
     },
     input: {
         height: 50,
         width: '100%',
-        borderColor: '#2C2C2C',
+        borderColor: '#333333',
         borderWidth: 1,
         borderRadius: 8,
         padding: 10,
         marginBottom: 20,
         fontSize: 16,
         fontWeight: '400',
-        color: '#1E1E1E',
-        backgroundColor: '#EAEAEA',
+        color: '#E0E0E0',
+        backgroundColor: 'rgba(51, 51, 51, 0.8)',
     },
     chooseColorText: {
         fontSize: 18,
         fontWeight: '500',
-        color: '#1E1E1E',
+        color: '#E0E0E0',
         marginBottom: 15,
     },
     colorPicker: {
@@ -139,26 +152,26 @@ const styles = StyleSheet.create({
         height: 50,
         borderRadius: 25,
         borderWidth: 2,
-        borderColor: '#2C2C2C',
+        borderColor: '#E0E0E0',
     },
     selectedColor: {
         borderWidth: 3,
-        borderColor: '#4A90E2',
+        borderColor: '#CF6679',
     },
     button: {
-        backgroundColor: '#4A90E2',
+        backgroundColor: '#CF6679',
         padding: 15,
         borderRadius: 8,
         width: '100%',
     },
     buttonText: {
-        color: '#FFFFFF',
+        color: '#000000',
         fontSize: 18,
         fontWeight: '600',
         textAlign: 'center',
     },
     errorText: {
-        color: '#4A90E2',
+        color: '#CF6679',
         fontSize: 14,
         marginBottom: 10,
     },
