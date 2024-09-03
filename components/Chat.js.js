@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { StyleSheet, View, Platform, SafeAreaView } from 'react-native';
+import { StyleSheet, View, Platform, SafeAreaView, Image, Dimensions } from 'react-native';
 import { GiftedChat, Bubble, InputToolbar, Day, Send } from "react-native-gifted-chat";
 import { collection, query, orderBy, onSnapshot, addDoc } from "firebase/firestore";
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -85,9 +85,24 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
         </Send>
     );
 
-
     const renderCustomActions = (props) => {
         return <CustomActions storage={storage} userID={userID} {...props} />;
+    };
+
+    const renderMessageImage = (props) => {
+        const { width } = Dimensions.get('window');
+        return (
+            <Image
+                style={{
+                    width: width * 0.7,
+                    height: width * 0.7,
+                    borderRadius: 13,
+                    margin: 3,
+                    resizeMode: 'cover'
+                }}
+                source={{ uri: props.currentMessage.image }}
+            />
+        );
     };
 
     useEffect(() => {
@@ -101,7 +116,8 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
                     _id: doc.id,
                     createdAt: doc.data().createdAt.toDate(),
                     text: doc.data().text,
-                    user: doc.data().user
+                    user: doc.data().user,
+                    image: doc.data().image
                 }));
                 cacheMessages(messagesFirestore);
                 setMessages(messagesFirestore);
@@ -114,6 +130,7 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
             if (unsubscribe) unsubscribe();
         };
     }, [isConnected]);
+
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: bgColor }]}>
             <GiftedChat
@@ -124,6 +141,7 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
                 renderSend={renderSend}
                 onSend={messages => onSend(messages)}
                 renderActions={renderCustomActions}
+                renderMessageImage={renderMessageImage}
                 user={{
                     _id: userID,
                     name
