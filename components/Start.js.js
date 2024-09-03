@@ -40,12 +40,12 @@ const Start = ({ navigation }) => {
         >
             <SafeAreaView style={styles.safeArea}>
                 <StatusBar style="light" />
+                <Text style={styles.title}>Welcome to BuzzTalk</Text>
                 <KeyboardAvoidingView
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
                     style={styles.container}
                 >
                     <View style={styles.innerContainer}>
-                        <Text style={styles.title}>Welcome to BuzzTalk</Text>
                         <TextInput
                             style={styles.input}
                             placeholder="Your Name"
@@ -57,7 +57,7 @@ const Start = ({ navigation }) => {
                             }}
                         />
                         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-                        <Text style={styles.chooseColorText}>Choose Your Chat Theme:</Text>
+                        <Text style={styles.chooseColorText}>Choose Your Chat Theme</Text>
                         <View style={styles.colorPicker}>
                             {colors.map((color) => (
                                 <TouchableOpacity
@@ -83,7 +83,6 @@ const Start = ({ navigation }) => {
         </ImageBackground>
     );
 };
-
 const styles = StyleSheet.create({
     backgroundImage: {
         flex: 1,
@@ -97,62 +96,66 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
-        justifyContent: 'center',
+        justifyContent: 'flex-end',
         alignItems: 'center',
+        paddingBottom: 40,
     },
     innerContainer: {
         width: '88%',
-        backgroundColor: 'rgba(31, 31, 31, 0.8)',
+        backgroundColor: 'rgba(31, 31, 31, 0.9)',
         padding: 20,
-        borderRadius: 15,
+        borderRadius: 20,
         alignItems: 'center',
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
-            height: 2,
+            height: 4,
         },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 8,
     },
     title: {
-        fontSize: 32,
+        fontSize: 36,
         fontWeight: '700',
-        color: '#E0E0E0',
-        marginBottom: 30,
+        color: '#FFFFFF',
         textAlign: 'center',
+        marginTop: 60,
+        marginBottom: 20,
     },
     input: {
         height: 50,
         width: '100%',
-        borderColor: '#333333',
+        borderColor: '#4A4A4A',
         borderWidth: 1,
-        borderRadius: 8,
-        padding: 10,
-        marginBottom: 20,
+        borderRadius: 10,
+        padding: 12,
+        marginBottom: 15,
         fontSize: 16,
         fontWeight: '400',
-        color: '#E0E0E0',
-        backgroundColor: 'rgba(51, 51, 51, 0.8)',
+        color: '#FFFFFF',
+        backgroundColor: 'rgba(74, 74, 74, 0.6)',
     },
     chooseColorText: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: '500',
-        color: '#E0E0E0',
-        marginBottom: 15,
+        color: '#FFFFFF',
+        marginBottom: 10,
+        textAlign: 'center',
+        width: '100%',
     },
     colorPicker: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        width: '80%',
-        marginBottom: 30,
+        width: '100%',
+        marginBottom: 20,
     },
     colorCircle: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
+        width: 45,
+        height: 45,
+        borderRadius: 22.5,
         borderWidth: 2,
-        borderColor: '#E0E0E0',
+        borderColor: '#FFFFFF',
     },
     selectedColor: {
         borderWidth: 3,
@@ -161,20 +164,22 @@ const styles = StyleSheet.create({
     button: {
         backgroundColor: '#CF6679',
         padding: 15,
-        borderRadius: 8,
+        borderRadius: 10,
         width: '100%',
     },
     buttonText: {
-        color: '#000000',
+        color: '#FFFFFF',
         fontSize: 18,
         fontWeight: '600',
         textAlign: 'center',
     },
     errorText: {
         color: '#CF6679',
-        fontSize: 14,
-        marginBottom: 10,
+        fontSize: 12,
+        marginBottom: 8,
     },
 });
+
+
 
 export default Start;

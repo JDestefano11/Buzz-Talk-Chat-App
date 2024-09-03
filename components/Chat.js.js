@@ -7,6 +7,7 @@ import CustomActions from "./CustomActions";
 
 const Chat = ({ route, navigation, db, storage, isConnected }) => {
     const { name, userID } = route.params;
+    const bgColor = route.params.bgColor;
     const [messages, setMessages] = useState([]);
 
     const renderInputToolbar = (props) => {
@@ -46,24 +47,24 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
             {...props}
             wrapperStyle={{
                 right: {
-                    backgroundColor: "#BB86FC", // User message bubble color
+                    backgroundColor: "#BB86FC",
                     borderRadius: 15,
                     padding: 10,
-                    marginBottom: 5, // Add margin for better spacing
+                    marginBottom: 5,
                 },
                 left: {
-                    backgroundColor: "#333333", // Other message bubble color
+                    backgroundColor: "#333333",
                     borderRadius: 15,
                     padding: 10,
-                    marginBottom: 5, // Add margin for better spacing
+                    marginBottom: 5,
                 }
             }}
             textStyle={{
                 right: {
-                    color: "#000000", // User message text color
+                    color: "#000000",
                 },
                 left: {
-                    color: "#E0E0E0", // Other message text color
+                    color: "#E0E0E0",
                 }
             }}
         />
@@ -118,7 +119,7 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: bgColor }]}>
             <GiftedChat
                 messages={messages}
                 renderBubble={renderBubble}
@@ -138,7 +139,6 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#121212',
         paddingTop: Platform.OS === 'ios' ? 20 : 0,
     },
     inputToolbar: {
