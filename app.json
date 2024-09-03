@@ -12,19 +12,13 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSCameraUsageDescription": "This app needs camera access to work",
-        "NSPhotoLibraryUsageDescription": "This app needs photo library access to work",
-        "NSLocationWhenInUseUsageDescription": "This app needs location access to work"
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "permissions": ["CAMERA", "MEDIA_LIBRARY", "LOCATION"]
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
