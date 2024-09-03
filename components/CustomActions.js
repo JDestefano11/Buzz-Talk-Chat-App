@@ -1,12 +1,15 @@
-import { StyleSheet, View, TouchableOpacity, Text, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, TouchableOpacity, Text, Alert, Modal } from 'react-native';
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { useState } from 'react';
+import MapView, { Marker } from 'react-native-maps';
 
 const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID }) => {
     const actionSheet = useActionSheet();
+    const [mapVisible, setMapVisible] = useState(false);
+    const [location, setLocation] = useState(null);
 
     const onActionPress = () => {
         const options = ['Choose From Library', 'Take Picture', 'Send Location', 'Cancel'];
@@ -79,12 +82,11 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
     const getLocation = async () => {
         const location = await Location.getCurrentPositionAsync({});
         if (location) {
-            onSend({
-                location: {
-                    longitude: location.coords.longitude,
-                    latitude: location.coords.latitude,
-                },
+            setLocation({
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude
             });
+            setMapVisible(true); // Show the map when a location is obtained
         } else {
             Alert.alert("Error", "Failed to fetch location. Please try again.");
         }
@@ -96,12 +98,47 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
         return `${userID}-${timeStamp}-${imageName}`;
     }
 
+    const handleSendLocation = () => {
+        if (location) {
+            onSend({
+                location: {
+                    longitude: location.longitude,
+                    latitude: location.latitude,
+                },
+            });
+            setMapVisible(false); // Hide the map after sending location
+        }
+    };
+
     return (
-        <TouchableOpacity style={styles.container} onPress={onActionPress}>
-            <View style={[styles.wrapper, wrapperStyle]}>
-                <Text style={[styles.iconText, iconTextStyle]}>+</Text>
-            </View>
-        </TouchableOpacity>
+        <View>
+            <TouchableOpacity style={styles.container} onPress={onActionPress}>
+                <View style={[styles.wrapper, wrapperStyle]}>
+                    <Text style={[styles.iconText, iconTextStyle]}>+</Text>
+                </View>
+            </TouchableOpacity>
+
+            <Modal visible={mapVisible} transparent={true} animationType="slide">
+                <View style={styles.mapContainer}>
+                    {location && (
+                        <MapView
+                            style={styles.map}
+                            initialRegion={{
+                                latitude: location.latitude,
+                                longitude: location.longitude,
+                                latitudeDelta: 0.0922,
+                                longitudeDelta: 0.0421,
+                            }}
+                        >
+                            <Marker coordinate={location} />
+                        </MapView>
+                    )}
+                    <TouchableOpacity style={styles.sendButton} onPress={handleSendLocation}>
+                        <Text style={styles.sendButtonText}>Send Location</Text>
+                    </TouchableOpacity>
+                </View>
+            </Modal>
+        </View>
     );
 };
 
@@ -126,6 +163,27 @@ const styles = StyleSheet.create({
         fontSize: 16,
         backgroundColor: 'transparent',
         textAlign: 'center',
+    },
+    mapContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        padding: 20,
+    },
+    map: {
+        width: '100%',
+        height: '80%',
+    },
+    sendButton: {
+        backgroundColor: '#007BFF',
+        padding: 10,
+        borderRadius: 5,
+        marginTop: 10,
+    },
+    sendButtonText: {
+        color: '#fff',
+        fontSize: 16,
     },
 });
 

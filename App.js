@@ -1,5 +1,4 @@
 import { StyleSheet, View, Button, Image, Alert } from 'react-native';
-import MapView from 'react-native-maps';
 import { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
