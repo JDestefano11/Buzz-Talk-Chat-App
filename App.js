@@ -48,12 +48,33 @@ const App = () => {
   return (
     <ActionSheetProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName='Start'>
-          <Stack.Screen name="Start" component={Start} />
-          <Stack.Screen name="Chat">
+        <Stack.Navigator
+          initialRouteName='Start'
+          screenOptions={{
+            headerTitleAlign: 'center',
+            headerStyle: {
+              backgroundColor: '#1E1E1E',
+            },
+            headerTintColor: '#FFFFFF',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }}
+        >
+          <Stack.Screen
+            name="Start"
+            component={Start}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Chat"
+            options={({ route }) => ({ title: route.params.name })}
+          >
             {props => <Chat db={db} storage={storage} isConnected={netInfo.isConnected} {...props} />}
           </Stack.Screen>
         </Stack.Navigator>
+
+
       </NavigationContainer>
     </ActionSheetProvider>
   );
