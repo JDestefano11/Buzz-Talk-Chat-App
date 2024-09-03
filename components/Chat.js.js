@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Platform } from 'react-native';
 import { GiftedChat, Bubble, InputToolbar } from "react-native-gifted-chat";
 import { collection, query, orderBy, onSnapshot, addDoc } from "firebase/firestore";
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -10,7 +10,13 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
     const [messages, setMessages] = useState([]);
 
     const renderInputToolbar = (props) => {
-        if (isConnected) return <InputToolbar {...props} containerStyle={styles.inputToolbar} />;
+        if (isConnected) return (
+            <InputToolbar
+                {...props}
+                containerStyle={styles.inputToolbar}
+                textInputStyle={styles.textInput} // Apply white text color here
+            />
+        );
         else return null;
     };
 
@@ -40,22 +46,24 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
             {...props}
             wrapperStyle={{
                 right: {
-                    backgroundColor: "#0084FF", // User message bubble color
+                    backgroundColor: "#BB86FC", // User message bubble color
                     borderRadius: 15,
                     padding: 10,
+                    marginBottom: 5, // Add margin for better spacing
                 },
                 left: {
-                    backgroundColor: "#ECECEC", // Other message bubble color
+                    backgroundColor: "#333333", // Other message bubble color
                     borderRadius: 15,
                     padding: 10,
+                    marginBottom: 5, // Add margin for better spacing
                 }
             }}
             textStyle={{
                 right: {
-                    color: "#FFFFFF", // User message text color
+                    color: "#000000", // User message text color
                 },
                 left: {
-                    color: "#000000", // Other message text color
+                    color: "#E0E0E0", // Other message text color
                 }
             }}
         />
@@ -121,6 +129,7 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
                     _id: userID,
                     name
                 }}
+                scrollToBottom
             />
         </View>
     );
@@ -129,10 +138,17 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5', // Primary background color
+        backgroundColor: '#121212',
+        paddingTop: Platform.OS === 'ios' ? 20 : 0,
     },
     inputToolbar: {
-        backgroundColor: '#FFFFFF', // Input toolbar background color
+        backgroundColor: '#1F1F1F',
+        borderTopWidth: 0,
+        padding: 8,
+    },
+    textInput: {
+        color: '#E0E0E0',
+        paddingHorizontal: 10,
     }
 });
 
