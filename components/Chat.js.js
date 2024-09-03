@@ -1,27 +1,16 @@
 import { useState, useEffect } from "react";
-import { StyleSheet, View, Platform } from 'react-native';
-import { GiftedChat, Bubble, InputToolbar } from "react-native-gifted-chat";
+import { StyleSheet, View, Platform, SafeAreaView } from 'react-native';
+import { GiftedChat, Bubble, InputToolbar, Day, Send } from "react-native-gifted-chat";
 import { collection, query, orderBy, onSnapshot, addDoc } from "firebase/firestore";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomActions from "./CustomActions";
+import { Ionicons } from '@expo/vector-icons';
 
 const Chat = ({ route, navigation, db, storage, isConnected }) => {
     const { name, userID } = route.params;
     const bgColor = route.params.bgColor;
     const [messages, setMessages] = useState([]);
 
-    const renderInputToolbar = (props) => {
-        if (isConnected) return (
-            <InputToolbar
-                {...props}
-                containerStyle={styles.inputToolbar}
-                textInputStyle={styles.textInput} // Apply white text color here
-            />
-        );
-        else return null;
-    };
-
-    // Cache messages function
     const cacheMessages = async (messagesToCache) => {
         try {
             await AsyncStorage.setItem("messages", JSON.stringify(messagesToCache));
@@ -30,7 +19,6 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
         }
     };
 
-    // Load cached messages function
     const loadCachedMessages = async () => {
         try {
             const cachedMessages = await AsyncStorage.getItem("messages");
@@ -42,51 +30,73 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
         }
     };
 
-    const renderBubble = (props) => {
-        return <Bubble
-            {...props}
-            wrapperStyle={{
-                right: {
-                    backgroundColor: "#BB86FC",
-                    borderRadius: 15,
-                    padding: 10,
-                    marginBottom: 5,
-                },
-                left: {
-                    backgroundColor: "#333333",
-                    borderRadius: 15,
-                    padding: 10,
-                    marginBottom: 5,
-                }
-            }}
-            textStyle={{
-                right: {
-                    color: "#000000",
-                },
-                left: {
-                    color: "#E0E0E0",
-                }
-            }}
-        />
-    }
-
     const onSend = (newMessages) => {
         if (isConnected) {
-            // If online, send to Firestore and cache
             addDoc(collection(db, "messages"), newMessages[0]);
         } else {
-            // If offline, cache locally
             setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages));
             cacheMessages([...messages, ...newMessages]);
         }
-    }
+    };
+
+    const renderInputToolbar = (props) => {
+        if (isConnected) return (
+            <InputToolbar
+                {...props}
+                containerStyle={styles.inputToolbar}
+                primaryStyle={styles.inputPrimary}
+            />
+        );
+        else return null;
+    };
+
+    const renderComposer = (props) => (
+        <Composer
+            {...props}
+            textInputStyle={styles.textInput}
+        />
+    );
+
+    const renderBubble = (props) => {
+        return (
+            <Bubble
+                {...props}
+                wrapperStyle={{
+                    right: styles.bubbleRight,
+                    left: styles.bubbleLeft,
+                }}
+                textStyle={{
+                    right: styles.bubbleTextRight,
+                    left: styles.bubbleTextLeft,
+                }}
+            />
+        );
+    };
+    const renderDay = (props) => (
+        <Day
+            {...props}
+            textStyle={styles.dayText}
+        />
+    );
+
+    const renderSend = (props) => (
+        <Send {...props}>
+            <View style={styles.sendButton}>
+                <Ionicons name="send" size={24} color="#FFD700" />
+            </View>
+        </Send>
+    );
+
+
+    const renderCustomActions = (props) => {
+        return <CustomActions storage={storage} userID={userID} {...props} />;
+    };
 
     useEffect(() => {
         navigation.setOptions({ title: name });
 
         let unsubscribe;
         if (isConnected === true) {
-            // If online, fetch from Firestore and cache
             const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
             unsubscribe = onSnapshot(q, (snapshot) => {
                 const messagesFirestore = snapshot.docs.map(doc => ({
@@ -99,31 +109,22 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
                 setMessages(messagesFirestore);
             });
         } else {
-            // If offline, load from AsyncStorage
             loadCachedMessages();
         }
 
-        // Clean up code
         return () => {
             if (unsubscribe) unsubscribe();
         };
     }, [isConnected]);
-
-    useEffect(() => {
-        console.log("userID changed:", userID);
-    }, [userID]);
-
-    const renderCustomActions = (props) => {
-        console.log("userID in Chat component:", userID);
-        return <CustomActions storage={storage} userID={userID} {...props} />;
-    };
-
     return (
-        <View style={[styles.container, { backgroundColor: bgColor }]}>
+        <SafeAreaView style={[styles.container, { backgroundColor: bgColor }]}>
             <GiftedChat
                 messages={messages}
                 renderBubble={renderBubble}
                 renderInputToolbar={renderInputToolbar}
+                renderComposer={renderComposer}
+                renderDay={renderDay}
+                renderSend={renderSend}
                 onSend={messages => onSend(messages)}
                 renderActions={renderCustomActions}
                 user={{
@@ -131,25 +132,70 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
                     name
                 }}
                 scrollToBottom
+                alwaysShowSend
+                renderAvatar={null}
             />
-        </View>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: Platform.OS === 'ios' ? 20 : 0,
     },
     inputToolbar: {
         backgroundColor: '#1F1F1F',
-        borderTopWidth: 0,
-        padding: 8,
+        borderTopWidth: 1,
+        borderTopColor: '#333333',
+        padding: Platform.OS === 'ios' ? 8 : 0,
+    },
+    inputPrimary: {
+        alignItems: 'center',
     },
     textInput: {
-        color: '#E0E0E0',
+        color: '#FFFFFF',
+        flex: 1,
         paddingHorizontal: 10,
-    }
+        fontSize: 16,
+        backgroundColor: '#333333',
+        borderRadius: 20,
+        paddingTop: Platform.OS === 'ios' ? 8 : 0,
+        paddingBottom: Platform.OS === 'ios' ? 8 : 0,
+        marginRight: 10,
+        marginLeft: 0,
+        marginTop: Platform.OS === 'ios' ? 6 : 0,
+        marginBottom: Platform.OS === 'ios' ? 6 : 0,
+    },
+    bubbleRight: {
+        backgroundColor: "#FFD700",
+        borderRadius: 18,
+        padding: 10,
+        marginBottom: 5,
+    },
+    bubbleLeft: {
+        backgroundColor: "#333333",
+        borderRadius: 18,
+        padding: 10,
+        marginBottom: 5,
+    },
+    bubbleTextRight: {
+        color: "#000000",
+    },
+    bubbleTextLeft: {
+        color: "#FFD700",
+    },
+    dayText: {
+        color: '#FFD700',
+        fontWeight: '600',
+    },
+    sendButton: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: 40,
+        width: 40,
+        marginRight: 5,
+        marginBottom: Platform.OS === 'ios' ? 0 : 5,
+    },
 });
 
 export default Chat;
