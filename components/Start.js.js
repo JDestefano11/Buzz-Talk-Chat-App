@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, SafeAreaView, Alert, ImageBackground } from "react-native";
 import { getAuth, signInAnonymously } from "firebase/auth";
 import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
 
 const Start = ({ navigation }) => {
     const [name, setName] = useState("");
@@ -46,16 +47,19 @@ const Start = ({ navigation }) => {
                     style={styles.container}
                 >
                     <View style={styles.innerContainer}>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Your Name"
-                            placeholderTextColor="#E0E0E0"
-                            value={name}
-                            onChangeText={(text) => {
-                                setName(text);
-                                setErrorMessage("");
-                            }}
-                        />
+                        <View style={styles.inputContainer}>
+                            <TextInput
+                                style={[styles.input, { paddingRight: 40 }]}
+                                placeholder="Your Name"
+                                placeholderTextColor="#E0E0E0"
+                                value={name}
+                                onChangeText={(text) => {
+                                    setName(text);
+                                    setErrorMessage("");
+                                }}
+                            />
+                            <Ionicons name="person" size={24} color="#E0E0E0" style={styles.inputIcon} />
+                        </View>
                         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
                         <Text style={styles.chooseColorText}>Choose Your Chat Theme</Text>
                         <View style={styles.colorPicker}>
@@ -80,9 +84,10 @@ const Start = ({ navigation }) => {
                     </View>
                 </KeyboardAvoidingView>
             </SafeAreaView>
-        </ImageBackground>
+        </ImageBackground >
     );
 };
+
 const styles = StyleSheet.create({
     backgroundImage: {
         flex: 1,
@@ -118,23 +123,33 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 36,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: '#D4AF37',
         textAlign: 'center',
         marginTop: 60,
         marginBottom: 20,
     },
-    input: {
-        height: 50,
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
         width: '100%',
         borderColor: '#4A4A4A',
         borderWidth: 1,
         borderRadius: 10,
-        padding: 12,
         marginBottom: 15,
+        backgroundColor: 'rgba(74, 74, 74, 0.6)',
+    },
+    inputIcon: {
+        padding: 10,
+        position: 'absolute',
+        right: 0,
+    },
+    input: {
+        flex: 1,
+        height: 50,
+        padding: 12,
         fontSize: 16,
         fontWeight: '400',
         color: '#FFFFFF',
-        backgroundColor: 'rgba(74, 74, 74, 0.6)',
     },
     chooseColorText: {
         fontSize: 16,
@@ -159,7 +174,7 @@ const styles = StyleSheet.create({
     },
     selectedColor: {
         borderWidth: 3,
-        borderColor: '#CF6679',
+        borderColor: '#D4AF37',
     },
     button: {
         backgroundColor: '#D4AF37',
@@ -179,7 +194,5 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
 });
-
-
 
 export default Start;
