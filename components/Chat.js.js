@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { StyleSheet, View, Platform, SafeAreaView, Image, Dimensions } from 'react-native';
+import { StyleSheet, View, Platform, SafeAreaView, Image, Dimensions, Text } from 'react-native';
 import { GiftedChat, Bubble, InputToolbar, Day, Send } from "react-native-gifted-chat";
 import { collection, query, orderBy, onSnapshot, addDoc } from "firebase/firestore";
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -40,17 +40,25 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
     };
 
     const renderInputToolbar = (props) => {
-        if (isConnected) return (
-            <InputToolbar
-                {...props}
-                containerStyle={styles.inputToolbar}
-                primaryStyle={styles.inputPrimary}
-            />
-        );
-        else return null;
+        if (isConnected) {
+            return (
+                <InputToolbar
+                    {...props}
+                    containerStyle={styles.inputToolbar}
+                    primaryStyle={styles.inputPrimary}
+                    textInputStyle={styles.textInput}
+                />
+            );
+        }
+        return null;
     };
 
     const renderBubble = (props) => {
+        // Skip bubble background for images
+        if (props.currentMessage.image) {
+            return renderMessageImage(props);
+        }
+
         return (
             <Bubble
                 {...props}
@@ -91,19 +99,29 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
 
     const renderMessageImage = (props) => {
         const { width } = Dimensions.get('window');
+        const isCurrentUser = props.currentMessage.user._id === props.user._id;
+
         return (
-            <Image
-                style={{
-                    width: width * 0.7,
-                    height: width * 0.7,
-                    borderRadius: 13,
-                    margin: 3,
-                    resizeMode: 'cover'
-                }}
-                source={{ uri: props.currentMessage.image }}
-            />
+            <View style={[
+                styles.imageContainer,
+                isCurrentUser ? styles.sentImageContainer : styles.receivedImageContainer
+            ]}>
+                <Image
+                    style={styles.messageImage}
+                    source={{ uri: props.currentMessage.image }}
+                />
+                <View style={[
+                    styles.imageBottomRow,
+                    isCurrentUser ? styles.sentTimeContainer : styles.receivedTimeContainer
+                ]}>
+                    <Text style={styles.imageTime}>
+                        {props.currentMessage.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                </View>
+            </View>
         );
     };
+
 
     useEffect(() => {
         navigation.setOptions({ title: name });
@@ -149,6 +167,11 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
                 scrollToBottom
                 alwaysShowSend
                 renderAvatar={null}
+                listViewProps={{
+                    style: {
+                        marginBottom: 20
+                    }
+                }}
             />
         </SafeAreaView>
     );
@@ -162,24 +185,20 @@ const styles = StyleSheet.create({
         backgroundColor: '#1F1F1F',
         borderTopWidth: 1,
         borderTopColor: '#333333',
-        padding: Platform.OS === 'ios' ? 8 : 0,
+        padding: 8,
     },
     inputPrimary: {
         alignItems: 'center',
+        flexDirection: 'row',
     },
     textInput: {
         color: '#FFFFFF',
-        flex: 1,
-        paddingHorizontal: 10,
-        fontSize: 16,
         backgroundColor: '#333333',
         borderRadius: 20,
-        paddingTop: Platform.OS === 'ios' ? 8 : 0,
-        paddingBottom: Platform.OS === 'ios' ? 8 : 0,
+        paddingHorizontal: 12,
         marginRight: 10,
-        marginLeft: 0,
-        marginTop: Platform.OS === 'ios' ? 6 : 0,
-        marginBottom: Platform.OS === 'ios' ? 6 : 0,
+        flex: 1,
+        minHeight: 40,
     },
     bubbleRight: {
         backgroundColor: "#FFD700",
@@ -233,6 +252,39 @@ const styles = StyleSheet.create({
         color: '#D4AF37',
         fontSize: 12,
     },
+    imageContainer: {
+        flexDirection: 'column',
+        marginBottom: 10,
+    },
+    sentImageContainer: {
+        alignItems: 'flex-end',
+    },
+    receivedImageContainer: {
+        alignItems: 'flex-start',
+    },
+    messageImage: {
+        width: Dimensions.get('window').width * 0.7,
+        height: Dimensions.get('window').width * 0.7,
+        borderRadius: 13,
+        margin: 3,
+        resizeMode: 'cover',
+    },
+    imageBottomRow: {
+        flexDirection: 'row',
+        width: Dimensions.get('window').width * 0.7,
+        paddingTop: 5,
+    },
+    sentTimeContainer: {
+        justifyContent: 'flex-end',
+    },
+    receivedTimeContainer: {
+        justifyContent: 'flex-start',
+    },
+    imageTime: {
+        color: '#D4AF37',
+        fontSize: 12,
+    }
 });
+
 
 export default Chat;
