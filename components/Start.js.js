@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Text, TextInput, ImageBackground, TouchableOpacity, KeyboardAvoidingView, Platform, SafeAreaView, Alert } from "react-native";
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, SafeAreaView, Alert } from "react-native";
 import { getAuth, signInAnonymously } from "firebase/auth";
 import { StatusBar } from 'expo-status-bar';
 
@@ -21,7 +21,7 @@ const Start = ({ navigation }) => {
             .then((userCredential) => {
                 Alert.alert("Success", "You've successfully signed in!");
                 navigation.navigate("Chat", {
-                    userId: userCredential.user.uid,
+                    userID: userCredential.user.uid,
                     name: name.trim(),
                     bgColor: bgColor,
                 });

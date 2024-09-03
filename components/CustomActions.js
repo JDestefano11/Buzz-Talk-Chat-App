@@ -2,8 +2,11 @@ import { StyleSheet, View, TouchableOpacity, Text, Alert } from 'react-native';
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage }) => {
+
+const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID }) => {
+    console.log("userID in CustomActions component:", userID);
     const actionSheet = useActionSheet();
 
     const onActionPress = () => {
@@ -33,22 +36,22 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage }) => {
         );
     };
 
+    const uploadAndSendImage = async (imageURI) => {
+        const uniqueRefString = generateReference(imageURI);
+        const newUploadRef = ref(storage, uniqueRefString);
+        const response = await fetch(imageURI);
+        const blob = await response.blob();
+        uploadBytes(newUploadRef, blob).then(async (snapshot) => {
+            const imageURL = await getDownloadURL(snapshot.ref)
+            onSend({ image: imageURL })
+        });
+    }
+
     const pickImage = async () => {
         let permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (permissions?.granted) {
             let result = await ImagePicker.launchImageLibraryAsync();
-            if (!result.canceled) {
-                const imageURI = result.assets[0].uri;
-                const uniqueRefString = generateReference(imageURI);
-                const response = await fetch(imageURI);
-                const blob = await response.blob();
-                const newUploadRef = ref(storage, uniqueRefString);
-                uploadBytes(newUploadRef, blob).then(async (snapshot) => {
-                    console.log('file has been uploaded');
-                    const imageURL = await getDownloadURL(snapshot.ref)
-                    onSend({ image: imageURL })
-                });
-            }
+            if (!result.canceled) await uploadAndSendImage(result.assets[0].uri);
             else Alert.alert("Permissions haven't been granted.");
         }
     }
@@ -57,11 +60,10 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage }) => {
         let permissions = await ImagePicker.requestCameraPermissionsAsync();
         if (permissions?.granted) {
             let result = await ImagePicker.launchCameraAsync();
-            if (!result.canceled) setImage(result.assets[0]);
-            else setImage(null);
+            if (!result.canceled) await uploadAndSendImage(result.assets[0].uri);
+            else Alert.alert("Permissions haven't been granted.");
         }
-    };
-
+    }
     const getLocation = async () => {
         let permissions = await Location.requestForegroundPermissionsAsync();
         if (permissions?.granted) {
@@ -77,14 +79,12 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage }) => {
         } else Alert.alert("Permissions haven't been granted.");
     }
 
-
     const generateReference = (uri) => {
+        console.log('userID:', userID);
         const timeStamp = (new Date()).getTime();
         const imageName = uri.split("/")[uri.split("/").length - 1];
         return `${userID}-${timeStamp}-${imageName}`;
     }
-
-
 
 
 

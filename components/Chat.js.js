@@ -7,7 +7,7 @@ import CustomActions from "./CustomActions";
 import MapView from 'react-native-maps';
 
 
-const Chat = ({ route, navigation, db, isConnected, storage }) => {
+const Chat = ({ route, navigation, db, storage, isConnected }) => {
     const { name, userID } = route.params;
     const [messages, setMessages] = useState([]);
 
@@ -92,11 +92,16 @@ const Chat = ({ route, navigation, db, isConnected, storage }) => {
         };
     }, [isConnected]);
 
+    useEffect(() => {
+        console.log("userID changed:", userID);
+    }, [userID]);
 
 
     const renderCustomActions = (props) => {
-        return <CustomActions storage={storage} {...props} />;
+        console.log("userID in Chat component:", userID);
+        return <CustomActions storage={storage} userID={userID} {...props} />;
     };
+
 
     return (
         <View style={styles.container}>
