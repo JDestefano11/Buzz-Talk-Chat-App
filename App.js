@@ -26,7 +26,7 @@ const App = () => {
     messagingSenderId: "180389154192",
     appId: "1:180389154192:web:cb52fa25326f2c9e15b715"
   };
-
+  const storage = getStorage(app);
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
@@ -43,31 +43,6 @@ const App = () => {
     }
   }, [netInfo.isConnected]);
 
-  const pickImage = async () => {
-    let permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (permissions?.granted) {
-      let result = await ImagePicker.launchImageLibraryAsync();
-      if (!result.canceled) {
-        const imageURI = result.assets[0].uri;
-        const response = await fetch(imageURI);
-        const blob = await response.blob();
-        const newUploadRef = ref(storage, 'image123');
-        uploadBytes(newUploadRef, blob).then(async (snapshot) => {
-          console.log('File has been uploaded successfully');
-        })
-      }
-      else Alert.alert("Permissions haven't been granted.");
-    }
-  }
-
-  const takePhoto = async () => {
-    let permissions = await ImagePicker.requestCameraPermissionsAsync();
-    if (permissions?.granted) {
-      let result = await ImagePicker.launchCameraAsync();
-      if (!result.canceled) setImage(result.assets[0]);
-      else setImage(null);
-    }
-  };
 
 
   const HomeScreen = () => (

@@ -7,7 +7,7 @@ import CustomActions from "./CustomActions";
 import MapView from 'react-native-maps';
 
 
-const Chat = ({ route, navigation, db, isConnected }) => {
+const Chat = ({ route, navigation, db, isConnected, storage }) => {
     const { name, userID } = route.params;
     const [messages, setMessages] = useState([]);
 
