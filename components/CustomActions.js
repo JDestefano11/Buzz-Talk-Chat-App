@@ -63,31 +63,47 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, storage, userID })
     }
 
     const pickImage = async () => {
-        let permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (permissions?.granted) {
-            let result = await ImagePicker.launchImageLibraryAsync();
-            if (!result.canceled) await uploadAndSendImage(result.assets[0].uri);
-            else Alert.alert("Permissions haven't been granted.");
+        let { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            const { status: newStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (newStatus !== 'granted') {
+                Alert.alert("Permission Required", "Please enable media library permissions to use this feature.");
+                return;
+            }
         }
+        let result = await ImagePicker.launchImageLibraryAsync();
+        if (!result.canceled) await uploadAndSendImage(result.assets[0].uri);
     }
 
     const takePhoto = async () => {
-        let permissions = await ImagePicker.requestCameraPermissionsAsync();
-        if (permissions?.granted) {
-            let result = await ImagePicker.launchCameraAsync();
-            if (!result.canceled) await uploadAndSendImage(result.assets[0].uri);
-            else Alert.alert("Permissions haven't been granted.");
+        let { status } = await ImagePicker.getCameraPermissionsAsync();
+        if (status !== 'granted') {
+            const { status: newStatus } = await ImagePicker.requestCameraPermissionsAsync();
+            if (newStatus !== 'granted') {
+                Alert.alert("Permission Required", "Please enable camera permissions to use this feature.");
+                return;
+            }
         }
+        let result = await ImagePicker.launchCameraAsync();
+        if (!result.canceled) await uploadAndSendImage(result.assets[0].uri);
     }
 
     const getLocation = async () => {
+        let { status } = await Location.getForegroundPermissionsAsync();
+        if (status !== 'granted') {
+            const { status: newStatus } = await Location.requestForegroundPermissionsAsync();
+            if (newStatus !== 'granted') {
+                Alert.alert("Permission Required", "Please enable location permissions to use this feature.");
+                return;
+            }
+        }
         const location = await Location.getCurrentPositionAsync({});
         if (location) {
             setLocation({
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude
             });
-            setMapVisible(true); // Show the map when a location is obtained
+            setMapVisible(true);
         } else {
             Alert.alert("Error", "Failed to fetch location. Please try again.");
         }
