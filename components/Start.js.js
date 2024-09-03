@@ -162,13 +162,13 @@ const styles = StyleSheet.create({
         borderColor: '#CF6679',
     },
     button: {
-        backgroundColor: '#CF6679',
+        backgroundColor: '#D4AF37',
         padding: 15,
         borderRadius: 10,
         width: '100%',
     },
     buttonText: {
-        color: '#FFFFFF',
+        color: '#000000',
         fontSize: 18,
         fontWeight: '600',
         textAlign: 'center',
