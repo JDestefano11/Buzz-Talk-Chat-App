@@ -196,9 +196,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#333333',
         borderRadius: 20,
         paddingHorizontal: 12,
+        paddingVertical: 12,
         marginRight: 10,
         flex: 1,
         minHeight: 40,
+        height: 40,
+        textAlignVertical: 'center',
     },
     bubbleRight: {
         backgroundColor: "#FFD700",
@@ -302,3 +305,5 @@ const styles = StyleSheet.create({
 
 
 export default Chat;
+
+
