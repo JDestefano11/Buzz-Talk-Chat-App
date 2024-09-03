@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Text, TextInput, ImageBackground, TouchableOpacity, KeyboardAvoidingView, Platform, SafeAreaView, Alert } from "react-native";
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, SafeAreaView, Alert, ImageBackground } from "react-native";
 import { getAuth, signInAnonymously } from "firebase/auth";
 import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
 
 const Start = ({ navigation }) => {
     const [name, setName] = useState("");
@@ -9,7 +10,7 @@ const Start = ({ navigation }) => {
     const [errorMessage, setErrorMessage] = useState("");
     const auth = getAuth();
 
-    const colors = ["#1E1E1E", "#2C2C2C", "#4A90E2", "#EAEAEA"];
+    const colors = ["#1A1A1A", "#2C2C2C", "#3D3D3D", "#D4AF37"];
 
     const signInUser = () => {
         if (name.trim() === "") {
@@ -21,7 +22,7 @@ const Start = ({ navigation }) => {
             .then((userCredential) => {
                 Alert.alert("Success", "You've successfully signed in!");
                 navigation.navigate("Chat", {
-                    userId: userCredential.user.uid,
+                    userID: userCredential.user.uid,
                     name: name.trim(),
                     bgColor: bgColor,
                 });
@@ -33,134 +34,164 @@ const Start = ({ navigation }) => {
     };
 
     return (
-        <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
-            <StatusBar style="light" />
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={styles.container}
-            >
-                <View style={styles.innerContainer}>
-                    <Text style={styles.title}>Welcome to BuzzTalk</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Your Name"
-                        placeholderTextColor="#2C2C2C"
-                        value={name}
-                        onChangeText={(text) => {
-                            setName(text);
-                            setErrorMessage("");
-                        }}
-                    />
-                    {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-                    <Text style={styles.chooseColorText}>Choose Your Chat Theme:</Text>
-                    <View style={styles.colorPicker}>
-                        {colors.map((color) => (
-                            <TouchableOpacity
-                                key={color}
-                                style={[
-                                    styles.colorCircle,
-                                    { backgroundColor: color },
-                                    bgColor === color && styles.selectedColor
-                                ]}
-                                onPress={() => setBgColor(color)}
+        <ImageBackground
+            source={require('../assets/backgroundimage.png')}
+            style={[styles.backgroundImage, { backgroundColor: bgColor }]}
+            imageStyle={{ opacity: 0.5 }}
+        >
+            <SafeAreaView style={styles.safeArea}>
+                <StatusBar style="light" />
+                <Text style={styles.title}>Welcome to BuzzTalk</Text>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    style={styles.container}
+                >
+                    <View style={styles.innerContainer}>
+                        <View style={styles.inputContainer}>
+                            <TextInput
+                                style={[styles.input, { paddingRight: 40 }]}
+                                placeholder="Your Name"
+                                placeholderTextColor="#E0E0E0"
+                                value={name}
+                                onChangeText={(text) => {
+                                    setName(text);
+                                    setErrorMessage("");
+                                }}
                             />
-                        ))}
+                            <Ionicons name="person" size={24} color="#E0E0E0" style={styles.inputIcon} />
+                        </View>
+                        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+                        <Text style={styles.chooseColorText}>Choose Your Chat Theme</Text>
+                        <View style={styles.colorPicker}>
+                            {colors.map((color) => (
+                                <TouchableOpacity
+                                    key={color}
+                                    style={[
+                                        styles.colorCircle,
+                                        { backgroundColor: color },
+                                        bgColor === color && styles.selectedColor
+                                    ]}
+                                    onPress={() => setBgColor(color)}
+                                />
+                            ))}
+                        </View>
+                        <TouchableOpacity
+                            style={styles.button}
+                            onPress={signInUser}
+                        >
+                            <Text style={styles.buttonText}>Start Chatting</Text>
+                        </TouchableOpacity>
                     </View>
-                    <TouchableOpacity
-                        style={styles.button}
-                        onPress={signInUser}
-                    >
-                        <Text style={styles.buttonText}>Start Chatting</Text>
-                    </TouchableOpacity>
-                </View>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
+                </KeyboardAvoidingView>
+            </SafeAreaView>
+        </ImageBackground >
     );
 };
 
 const styles = StyleSheet.create({
+    backgroundImage: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+    },
     safeArea: {
         flex: 1,
+        backgroundColor: 'rgba(18, 18, 18, 0.6)',
     },
     container: {
         flex: 1,
-        justifyContent: 'center',
+        justifyContent: 'flex-end',
         alignItems: 'center',
+        paddingBottom: 40,
     },
     innerContainer: {
         width: '88%',
-        backgroundColor: 'rgba(234, 234, 234, 0.9)',
+        backgroundColor: 'rgba(31, 31, 31, 0.9)',
         padding: 20,
-        borderRadius: 15,
+        borderRadius: 20,
         alignItems: 'center',
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
-            height: 2,
+            height: 4,
         },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 8,
     },
     title: {
-        fontSize: 32,
+        fontSize: 36,
         fontWeight: '700',
-        color: '#1E1E1E',
-        marginBottom: 30,
+        color: '#D4AF37',
         textAlign: 'center',
+        marginTop: 60,
+        marginBottom: 20,
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '100%',
+        borderColor: '#4A4A4A',
+        borderWidth: 1,
+        borderRadius: 10,
+        marginBottom: 15,
+        backgroundColor: 'rgba(74, 74, 74, 0.6)',
+    },
+    inputIcon: {
+        padding: 10,
+        position: 'absolute',
+        right: 0,
     },
     input: {
+        flex: 1,
         height: 50,
-        width: '100%',
-        borderColor: '#2C2C2C',
-        borderWidth: 1,
-        borderRadius: 8,
-        padding: 10,
-        marginBottom: 20,
+        padding: 12,
         fontSize: 16,
         fontWeight: '400',
-        color: '#1E1E1E',
-        backgroundColor: '#EAEAEA',
+        color: '#FFFFFF',
     },
     chooseColorText: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: '500',
-        color: '#1E1E1E',
-        marginBottom: 15,
+        color: '#FFFFFF',
+        marginBottom: 10,
+        textAlign: 'center',
+        width: '100%',
     },
     colorPicker: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        width: '80%',
-        marginBottom: 30,
+        width: '100%',
+        marginBottom: 20,
     },
     colorCircle: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
+        width: 45,
+        height: 45,
+        borderRadius: 22.5,
         borderWidth: 2,
-        borderColor: '#2C2C2C',
+        borderColor: '#FFFFFF',
     },
     selectedColor: {
         borderWidth: 3,
-        borderColor: '#4A90E2',
+        borderColor: '#D4AF37',
     },
     button: {
-        backgroundColor: '#4A90E2',
+        backgroundColor: '#D4AF37',
         padding: 15,
-        borderRadius: 8,
+        borderRadius: 10,
         width: '100%',
     },
     buttonText: {
-        color: '#FFFFFF',
+        color: '#000000',
         fontSize: 18,
         fontWeight: '600',
         textAlign: 'center',
     },
     errorText: {
-        color: '#4A90E2',
-        fontSize: 14,
-        marginBottom: 10,
+        color: '#CF6679',
+        fontSize: 12,
+        marginBottom: 8,
     },
 });
 
