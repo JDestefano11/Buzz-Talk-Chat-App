@@ -3,19 +3,22 @@ import { StyleSheet, View } from 'react-native';
 import { GiftedChat, Bubble, InputToolbar } from "react-native-gifted-chat";
 import { collection, query, orderBy, onSnapshot, addDoc } from "firebase/firestore";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import CustomActions from './CustomActions';
+import CustomActions from "./CustomActions";
 import MapView from 'react-native-maps';
 
 
-const Chat = ({ route, navigation, db, storage, isConnected }) => {
-    const { name, userId } = route.params;
+const Chat = ({ route, navigation, db, isConnected }) => {
+    const { name, userID } = route.params;
     const [messages, setMessages] = useState([]);
+
 
     const renderInputToolbar = (props) => {
         if (isConnected) return <InputToolbar {...props} />;
         else return null;
     };
 
+
+    // Cache messages function
     const cacheMessages = async (messagesToCache) => {
         try {
             await AsyncStorage.setItem("messages", JSON.stringify(messagesToCache));
@@ -24,6 +27,7 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
         }
     };
 
+    // Load cached messages function
     const loadCachedMessages = async () => {
         try {
             const cachedMessages = await AsyncStorage.getItem("messages");
@@ -47,71 +51,52 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
                 }
             }}
         />
-    };
+    }
 
-    const onSend = (newMessages = []) => {
+    const onSend = (newMessages) => {
         if (isConnected) {
-            const message = newMessages[0];
-            addDoc(collection(db, "messages"), {
-                ...message,
-                createdAt: new Date(),
-                user: {
-                    _id: userId,
-                    name: name
-                },
-                location: message.location || null
-            });
+            // If online, send to Firestore and cache
+            addDoc(collection(db, "messages"), newMessages[0]);
         } else {
+            // If offline, cache locally
             setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages));
             cacheMessages([...messages, ...newMessages]);
         }
-    };
-    const renderCustomView = (props) => {
-        const { currentMessage } = props;
-        if (currentMessage.location) {
-            return (
-                <MapView
-                    style={{ width: 150, height: 100, borderRadius: 13, margin: 3 }}
-                    region={{
-                        latitude: currentMessage.location.latitude,
-                        longitude: currentMessage.location.longitude,
-                        latitudeDelta: 0.0922,
-                        longitudeDelta: 0.0421,
-                    }}
-                />
-            );
-        }
-        return null;
-    };
-
+    }
 
     useEffect(() => {
         navigation.setOptions({ title: name });
 
         let unsubscribe;
         if (isConnected === true) {
+            // If online, fetch from Firestore and cache
             const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
             unsubscribe = onSnapshot(q, (snapshot) => {
                 const messagesFirestore = snapshot.docs.map(doc => ({
                     _id: doc.id,
                     createdAt: doc.data().createdAt.toDate(),
                     text: doc.data().text,
-                    user: doc.data().user,
-                    image: doc.data().image,
-                    location: doc.data().location || null
+                    user: doc.data().user
                 }));
-
                 cacheMessages(messagesFirestore);
                 setMessages(messagesFirestore);
             });
         } else {
+            // If offline, load from AsyncStorage
             loadCachedMessages();
         }
 
+        // Clean up code
         return () => {
             if (unsubscribe) unsubscribe();
         };
     }, [isConnected]);
+
+
+
+    const renderCustomActions = (props) => {
+        return <CustomActions storage={storage} {...props} />;
+    };
 
     return (
         <View style={styles.container}>
@@ -119,14 +104,14 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
                 messages={messages}
                 renderBubble={renderBubble}
                 renderInputToolbar={renderInputToolbar}
-                renderCustomView={renderCustomView}
-                renderActions={(props) => <CustomActions {...props} storage={storage} onSend={onSend} />}
                 onSend={messages => onSend(messages)}
+                renderActions={renderCustomActions}
                 user={{
-                    _id: userId,
-                    name: name
+                    _id: userID,
+                    name
                 }}
             />
+
         </View>
     );
 };
