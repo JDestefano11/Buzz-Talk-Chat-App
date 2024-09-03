@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Platform, SafeAreaView, Image, Dimensions, Text, Alert, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Platform, SafeAreaView, Image, Dimensions, Text, Alert, TouchableOpacity, Clipboard, ToastAndroid } from 'react-native';
 import { GiftedChat, Bubble, InputToolbar, Day, Send } from "react-native-gifted-chat";
-import { collection, query, orderBy, onSnapshot, addDoc, deleteDoc, doc } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, getDoc } from "firebase/firestore";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomActions from "./CustomActions";
 import { Ionicons } from '@expo/vector-icons';
@@ -41,10 +41,46 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
         }
     };
 
+    const handleLongPress = (message) => {
+        const { _id, text } = message;
+
+        Alert.alert(
+            "Message Options",
+            "",
+            [
+                { text: "Copy Text", onPress: () => copyToClipboard(text) },
+                { text: "Delete Message", onPress: () => deleteMessage(_id) },
+                { text: "Cancel", style: "cancel" }
+            ]
+        );
+    };
+
+    const copyToClipboard = (text) => {
+        Clipboard.setString(text);
+        if (Platform.OS === 'android') {
+            ToastAndroid.show("Copied to clipboard", ToastAndroid.SHORT);
+        } else {
+            Alert.alert("Copied to clipboard");
+        }
+    };
+
     const deleteMessage = async (messageId) => {
         if (isConnected) {
             try {
-                await deleteDoc(doc(db, "messages", messageId));
+                const messageRef = doc(db, "messages", messageId);
+                // Fetch the message to check if it contains an image
+                const messageSnap = await getDoc(messageRef);
+                if (messageSnap.exists()) {
+                    const messageData = messageSnap.data();
+
+                    // If message has an image, delete the image from storage
+                    if (messageData.image) {
+                        const imageRef = storage.refFromURL(messageData.image);
+                        await imageRef.delete();
+                    }
+                    // Update the message in Firestore to show "This message was deleted"
+                    await updateDoc(messageRef, { text: "[This message was deleted]" });
+                }
             } catch (error) {
                 console.error("Error deleting message: ", error);
             }
@@ -84,11 +120,28 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
             );
         };
 
-        if (props.currentMessage.image) {
-            return renderMessageImage(props, isSelected, handleLongPress);
+        if (props.currentMessage.text === "[This message was deleted]") {
+            return (
+                <Bubble
+                    {...props}
+                    wrapperStyle={{
+                        right: [styles.deletedBubbleRight],
+                        left: [styles.deletedBubbleLeft],
+                    }}
+                    textStyle={{
+                        right: styles.deletedTextRight,
+                        left: styles.deletedTextLeft,
+                    }}
+                />
+            );
         }
-        if (props.currentMessage.location) {
-            return renderMessageLocation(props, isSelected, handleLongPress);
+
+        if (props.currentMessage.image) {
+            return (
+                <View style={[styles.imageContainer, styles.deletedImageContainer]}>
+                    <Text style={styles.deletedImageText}>This image was deleted</Text>
+                </View>
+            );
         }
 
         return (
@@ -231,16 +284,12 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
                     renderInputToolbar={renderInputToolbar}
                     renderDay={renderDay}
                     renderSend={renderSend}
-                    onSend={messages => onSend(messages)}
                     renderActions={renderCustomActions}
-                    renderMessageImage={renderMessageImage}
+                    onSend={messages => onSend(messages)}
                     user={{
                         _id: userID,
-                        name
                     }}
-                    scrollToBottom
-                    alwaysShowSend
-                    renderAvatar={null}
+                    onLongPress={(context, message) => handleLongPress(message)}
                     listViewProps={{
                         style: {
                             marginBottom: 20
@@ -381,6 +430,42 @@ const styles = StyleSheet.create({
     },
     selectedImage: {
         opacity: 0.7,
+    },
+    deletedBubbleRight: {
+        backgroundColor: "#FFDDDD",
+        borderRadius: 18,
+        padding: 12,
+        marginBottom: 8,
+        marginLeft: 60,
+    },
+    deletedBubbleLeft: {
+        backgroundColor: "#FFDDDD",
+        borderRadius: 18,
+        padding: 12,
+        marginBottom: 8,
+        marginRight: 60,
+    },
+    deletedTextRight: {
+        color: "#FF0000",
+        fontSize: 16,
+        textAlign: 'right',
+    },
+    deletedTextLeft: {
+        color: "#FF0000",
+        fontSize: 16,
+        textAlign: 'left',
+    },
+    deletedImageContainer: {
+        flexDirection: 'column',
+        marginBottom: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    deletedImageText: {
+        color: '#FF0000',
+        fontSize: 16,
+        textAlign: 'center',
+        padding: 10,
     },
 });
 
