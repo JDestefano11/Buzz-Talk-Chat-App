@@ -5,18 +5,14 @@ import { collection, query, orderBy, onSnapshot, addDoc } from "firebase/firesto
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomActions from "./CustomActions";
 
-
-
 const Chat = ({ route, navigation, db, storage, isConnected }) => {
     const { name, userID } = route.params;
     const [messages, setMessages] = useState([]);
 
-
     const renderInputToolbar = (props) => {
-        if (isConnected) return <InputToolbar {...props} />;
+        if (isConnected) return <InputToolbar {...props} containerStyle={styles.inputToolbar} />;
         else return null;
     };
-
 
     // Cache messages function
     const cacheMessages = async (messagesToCache) => {
@@ -44,10 +40,22 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
             {...props}
             wrapperStyle={{
                 right: {
-                    backgroundColor: "#000",
+                    backgroundColor: "#0084FF", // User message bubble color
+                    borderRadius: 15,
+                    padding: 10,
                 },
                 left: {
-                    backgroundColor: "#fff",
+                    backgroundColor: "#ECECEC", // Other message bubble color
+                    borderRadius: 15,
+                    padding: 10,
+                }
+            }}
+            textStyle={{
+                right: {
+                    color: "#FFFFFF", // User message text color
+                },
+                left: {
+                    color: "#000000", // Other message text color
                 }
             }}
         />
@@ -96,12 +104,10 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
         console.log("userID changed:", userID);
     }, [userID]);
 
-
     const renderCustomActions = (props) => {
         console.log("userID in Chat component:", userID);
         return <CustomActions storage={storage} userID={userID} {...props} />;
     };
-
 
     return (
         <View style={styles.container}>
@@ -116,14 +122,17 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
                     name
                 }}
             />
-
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1
+        flex: 1,
+        backgroundColor: '#F5F5F5', // Primary background color
+    },
+    inputToolbar: {
+        backgroundColor: '#FFFFFF', // Input toolbar background color
     }
 });
 
