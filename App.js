@@ -53,7 +53,7 @@ const App = () => {
           screenOptions={{
             headerTitleAlign: 'center',
             headerStyle: {
-              backgroundColor: '#1E1E1E',
+              backgroundColor: '#FFD700',
             },
             headerTintColor: '#FFFFFF',
             headerTitleStyle: {
