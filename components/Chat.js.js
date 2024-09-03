@@ -5,6 +5,7 @@ import { collection, query, orderBy, onSnapshot, addDoc } from "firebase/firesto
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomActions from "./CustomActions";
 import { Ionicons } from '@expo/vector-icons';
+import MapView, { Marker } from 'react-native-maps'; // Import MapView
 
 const Chat = ({ route, navigation, db, storage, isConnected }) => {
     const { name, userID } = route.params;
@@ -54,9 +55,11 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
     };
 
     const renderBubble = (props) => {
-        // Skip bubble background for images
         if (props.currentMessage.image) {
             return renderMessageImage(props);
+        }
+        if (props.currentMessage.location) {
+            return renderMessageLocation(props);
         }
 
         return (
@@ -122,6 +125,38 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
         );
     };
 
+    const renderMessageLocation = (props) => {
+        const { latitude, longitude } = props.currentMessage.location;
+        const { width } = Dimensions.get('window');
+        const isCurrentUser = props.currentMessage.user._id === props.user._id;
+
+        return (
+            <View style={[
+                styles.imageContainer,
+                isCurrentUser ? styles.sentImageContainer : styles.receivedImageContainer
+            ]}>
+                <MapView
+                    style={styles.mapView}
+                    initialRegion={{
+                        latitude,
+                        longitude,
+                        latitudeDelta: 0.0922,
+                        longitudeDelta: 0.0421,
+                    }}
+                >
+                    <Marker coordinate={{ latitude, longitude }} />
+                </MapView>
+                <View style={[
+                    styles.imageBottomRow,
+                    isCurrentUser ? styles.sentTimeContainer : styles.receivedTimeContainer
+                ]}>
+                    <Text style={styles.imageTime}>
+                        {props.currentMessage.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                </View>
+            </View>
+        );
+    };
 
     useEffect(() => {
         navigation.setOptions({ title: name });
@@ -135,7 +170,8 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
                     createdAt: doc.data().createdAt.toDate(),
                     text: doc.data().text,
                     user: doc.data().user,
-                    image: doc.data().image
+                    image: doc.data().image,
+                    location: doc.data().location,
                 }));
                 cacheMessages(messagesFirestore);
                 setMessages(messagesFirestore);
@@ -272,6 +308,11 @@ const styles = StyleSheet.create({
         margin: 3,
         resizeMode: 'cover',
     },
+    mapView: {
+        width: Dimensions.get('window').width * 0.7,
+        height: Dimensions.get('window').width * 0.5,
+        borderRadius: 13,
+    },
     imageBottomRow: {
         flexDirection: 'row',
         width: Dimensions.get('window').width * 0.7,
@@ -300,10 +341,6 @@ const styles = StyleSheet.create({
         height: 26,
         width: 26,
     },
-
 });
 
-
 export default Chat;
-
-
