@@ -50,13 +50,6 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
         else return null;
     };
 
-    const renderComposer = (props) => (
-        <Composer
-            {...props}
-            textInputStyle={styles.textInput}
-        />
-    );
-
     const renderBubble = (props) => {
         return (
             <Bubble
@@ -122,7 +115,6 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
                 messages={messages}
                 renderBubble={renderBubble}
                 renderInputToolbar={renderInputToolbar}
-                renderComposer={renderComposer}
                 renderDay={renderDay}
                 renderSend={renderSend}
                 onSend={messages => onSend(messages)}
