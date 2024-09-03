@@ -9,7 +9,7 @@ const Start = ({ navigation }) => {
     const [errorMessage, setErrorMessage] = useState("");
     const auth = getAuth();
 
-    const colors = ["#121212", "#1F1F1F", "#333333", "#BB86FC"];
+    const colors = ["#1A1A1A", "#2C2C2C", "#3D3D3D", "#D4AF37"];
 
     const signInUser = () => {
         if (name.trim() === "") {

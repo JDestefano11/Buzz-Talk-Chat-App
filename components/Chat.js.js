@@ -62,9 +62,14 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
                     right: styles.bubbleTextRight,
                     left: styles.bubbleTextLeft,
                 }}
+                timeTextStyle={{
+                    right: styles.timeTextRight,
+                    left: styles.timeTextLeft,
+                }}
             />
         );
     };
+
     const renderDay = (props) => (
         <Day
             {...props}
@@ -161,20 +166,34 @@ const styles = StyleSheet.create({
     bubbleRight: {
         backgroundColor: "#FFD700",
         borderRadius: 18,
-        padding: 10,
-        marginBottom: 5,
+        padding: 12,
+        marginBottom: 8,
+        marginLeft: 60,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.22,
+        shadowRadius: 2.22,
+        elevation: 3,
     },
     bubbleLeft: {
         backgroundColor: "#333333",
         borderRadius: 18,
-        padding: 10,
-        marginBottom: 5,
+        padding: 12,
+        marginBottom: 8,
+        marginRight: 60,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.22,
+        shadowRadius: 2.22,
+        elevation: 3,
     },
     bubbleTextRight: {
         color: "#000000",
+        fontSize: 16,
     },
     bubbleTextLeft: {
         color: "#FFD700",
+        fontSize: 16,
     },
     dayText: {
         color: '#FFD700',
@@ -187,6 +206,14 @@ const styles = StyleSheet.create({
         width: 40,
         marginRight: 5,
         marginBottom: Platform.OS === 'ios' ? 0 : 5,
+    },
+    timeTextRight: {
+        color: '#333333',
+        fontSize: 12,
+    },
+    timeTextLeft: {
+        color: '#D4AF37',
+        fontSize: 12,
     },
 });
 
