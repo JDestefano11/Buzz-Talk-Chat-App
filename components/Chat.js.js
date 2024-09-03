@@ -86,7 +86,7 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
     );
 
     const renderSend = (props) => (
-        <Send {...props}>
+        <Send {...props} containerStyle={styles.sendButtonContainer}>
             <View style={styles.sendButton}>
                 <Ionicons name="send" size={24} color="#FFD700" />
             </View>
@@ -283,7 +283,21 @@ const styles = StyleSheet.create({
     imageTime: {
         color: '#D4AF37',
         fontSize: 12,
-    }
+    },
+    sendButtonContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        alignSelf: 'flex-end',
+        marginRight: 10,
+        marginBottom: 5,
+    },
+    sendButton: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: 26,
+        width: 26,
+    },
+
 });
 
 

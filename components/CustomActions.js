@@ -148,8 +148,9 @@ const styles = StyleSheet.create({
         width: 26,
         height: 26,
         marginLeft: 10,
-        marginBottom: 10,
+        marginBottom: 5,
     },
+
     wrapper: {
         borderRadius: 13,
         borderColor: "#b2b2b2",
