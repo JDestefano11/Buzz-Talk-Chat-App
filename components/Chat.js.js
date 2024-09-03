@@ -1,17 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Platform, SafeAreaView, Image, Dimensions, Text, Alert, TouchableOpacity, Clipboard, ToastAndroid } from 'react-native';
+import { useState, useEffect } from "react";
+import { StyleSheet, View, Platform, SafeAreaView, Image, Dimensions, Text } from 'react-native';
 import { GiftedChat, Bubble, InputToolbar, Day, Send } from "react-native-gifted-chat";
-import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, getDoc } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, addDoc } from "firebase/firestore";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomActions from "./CustomActions";
 import { Ionicons } from '@expo/vector-icons';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps'; // Import MapView
 
 const Chat = ({ route, navigation, db, storage, isConnected }) => {
     const { name, userID } = route.params;
     const bgColor = route.params.bgColor;
     const [messages, setMessages] = useState([]);
-    const [selectedMessage, setSelectedMessage] = useState(null);
 
     const cacheMessages = async (messagesToCache) => {
         try {
@@ -41,56 +40,6 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
         }
     };
 
-    const handleLongPress = (message) => {
-        const { _id, text } = message;
-
-        Alert.alert(
-            "Message Options",
-            "",
-            [
-                { text: "Copy Text", onPress: () => copyToClipboard(text) },
-                { text: "Delete Message", onPress: () => deleteMessage(_id) },
-                { text: "Cancel", style: "cancel" }
-            ]
-        );
-    };
-
-    const copyToClipboard = (text) => {
-        Clipboard.setString(text);
-        if (Platform.OS === 'android') {
-            ToastAndroid.show("Copied to clipboard", ToastAndroid.SHORT);
-        } else {
-            Alert.alert("Copied to clipboard");
-        }
-    };
-
-    const deleteMessage = async (messageId) => {
-        if (isConnected) {
-            try {
-                const messageRef = doc(db, "messages", messageId);
-                // Fetch the message to check if it contains an image
-                const messageSnap = await getDoc(messageRef);
-                if (messageSnap.exists()) {
-                    const messageData = messageSnap.data();
-
-                    // If message has an image, delete the image from storage
-                    if (messageData.image) {
-                        const imageRef = storage.refFromURL(messageData.image);
-                        await imageRef.delete();
-                    }
-                    // Update the message in Firestore to show "This message was deleted"
-                    await updateDoc(messageRef, { text: "[This message was deleted]" });
-                }
-            } catch (error) {
-                console.error("Error deleting message: ", error);
-            }
-        } else {
-            setMessages(prevMessages => prevMessages.filter(message => message._id !== messageId));
-            cacheMessages(messages.filter(message => message._id !== messageId));
-        }
-        setSelectedMessage(null);
-    };
-
     const renderInputToolbar = (props) => {
         if (isConnected) {
             return (
@@ -106,62 +55,29 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
     };
 
     const renderBubble = (props) => {
-        const isSelected = selectedMessage === props.currentMessage._id;
-
-        const handleLongPress = () => {
-            setSelectedMessage(props.currentMessage._id);
-            Alert.alert(
-                "Delete Message",
-                "Are you sure you want to delete this message?",
-                [
-                    { text: "Cancel", style: "cancel", onPress: () => setSelectedMessage(null) },
-                    { text: "Delete", onPress: () => deleteMessage(props.currentMessage._id) }
-                ]
-            );
-        };
-
-        if (props.currentMessage.text === "[This message was deleted]") {
-            return (
-                <Bubble
-                    {...props}
-                    wrapperStyle={{
-                        right: [styles.deletedBubbleRight],
-                        left: [styles.deletedBubbleLeft],
-                    }}
-                    textStyle={{
-                        right: styles.deletedTextRight,
-                        left: styles.deletedTextLeft,
-                    }}
-                />
-            );
-        }
-
         if (props.currentMessage.image) {
-            return (
-                <View style={[styles.imageContainer, styles.deletedImageContainer]}>
-                    <Text style={styles.deletedImageText}>This image was deleted</Text>
-                </View>
-            );
+            return renderMessageImage(props);
+        }
+        if (props.currentMessage.location) {
+            return renderMessageLocation(props);
         }
 
         return (
-            <TouchableOpacity onLongPress={handleLongPress} activeOpacity={0.7}>
-                <Bubble
-                    {...props}
-                    wrapperStyle={{
-                        right: [styles.bubbleRight, isSelected && styles.selectedBubble],
-                        left: [styles.bubbleLeft, isSelected && styles.selectedBubble],
-                    }}
-                    textStyle={{
-                        right: styles.bubbleTextRight,
-                        left: styles.bubbleTextLeft,
-                    }}
-                    timeTextStyle={{
-                        right: styles.timeTextRight,
-                        left: styles.timeTextLeft,
-                    }}
-                />
-            </TouchableOpacity>
+            <Bubble
+                {...props}
+                wrapperStyle={{
+                    right: styles.bubbleRight,
+                    left: styles.bubbleLeft,
+                }}
+                textStyle={{
+                    right: styles.bubbleTextRight,
+                    left: styles.bubbleTextLeft,
+                }}
+                timeTextStyle={{
+                    right: styles.timeTextRight,
+                    left: styles.timeTextLeft,
+                }}
+            />
         );
     };
 
@@ -184,67 +100,61 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
         return <CustomActions storage={storage} userID={userID} {...props} />;
     };
 
-    const renderMessageImage = (props, isSelected, handleLongPress) => {
+    const renderMessageImage = (props) => {
         const { width } = Dimensions.get('window');
         const isCurrentUser = props.currentMessage.user._id === props.user._id;
 
         return (
-            <TouchableOpacity onLongPress={handleLongPress} activeOpacity={0.7}>
+            <View style={[
+                styles.imageContainer,
+                isCurrentUser ? styles.sentImageContainer : styles.receivedImageContainer
+            ]}>
+                <Image
+                    style={styles.messageImage}
+                    source={{ uri: props.currentMessage.image }}
+                />
                 <View style={[
-                    styles.imageContainer,
-                    isCurrentUser ? styles.sentImageContainer : styles.receivedImageContainer,
-                    isSelected && styles.selectedImage
+                    styles.imageBottomRow,
+                    isCurrentUser ? styles.sentTimeContainer : styles.receivedTimeContainer
                 ]}>
-                    <Image
-                        style={styles.messageImage}
-                        source={{ uri: props.currentMessage.image }}
-                    />
-                    <View style={[
-                        styles.imageBottomRow,
-                        isCurrentUser ? styles.sentTimeContainer : styles.receivedTimeContainer
-                    ]}>
-                        <Text style={styles.imageTime}>
-                            {props.currentMessage.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </Text>
-                    </View>
+                    <Text style={styles.imageTime}>
+                        {props.currentMessage.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
                 </View>
-            </TouchableOpacity>
+            </View>
         );
     };
 
-    const renderMessageLocation = (props, isSelected, handleLongPress) => {
+    const renderMessageLocation = (props) => {
         const { latitude, longitude } = props.currentMessage.location;
         const { width } = Dimensions.get('window');
         const isCurrentUser = props.currentMessage.user._id === props.user._id;
 
         return (
-            <TouchableOpacity onLongPress={handleLongPress} activeOpacity={0.7}>
+            <View style={[
+                styles.imageContainer,
+                isCurrentUser ? styles.sentImageContainer : styles.receivedImageContainer
+            ]}>
+                <MapView
+                    style={styles.mapView}
+                    initialRegion={{
+                        latitude,
+                        longitude,
+                        latitudeDelta: 0.0922,
+                        longitudeDelta: 0.0421,
+                    }}
+                >
+                    <Marker coordinate={{ latitude, longitude }} />
+                </MapView>
                 <View style={[
-                    styles.imageContainer,
-                    isCurrentUser ? styles.sentImageContainer : styles.receivedImageContainer,
-                    isSelected && styles.selectedImage
+                    styles.imageBottomRow,
+                    isCurrentUser ? styles.sentTimeContainer : styles.receivedTimeContainer
                 ]}>
-                    <MapView
-                        style={styles.mapView}
-                        initialRegion={{
-                            latitude,
-                            longitude,
-                            latitudeDelta: 0.0922,
-                            longitudeDelta: 0.0421,
-                        }}
-                    >
-                        <Marker coordinate={{ latitude, longitude }} />
-                    </MapView>
-                    <View style={[
-                        styles.imageBottomRow,
-                        isCurrentUser ? styles.sentTimeContainer : styles.receivedTimeContainer
-                    ]}>
-                        <Text style={styles.imageTime}>
-                            {props.currentMessage.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </Text>
-                    </View>
+                    <Text style={styles.imageTime}>
+                        {props.currentMessage.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
                 </View>
-            </TouchableOpacity>
+            </View>
         );
     };
 
@@ -277,36 +187,34 @@ const Chat = ({ route, navigation, db, storage, isConnected }) => {
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: bgColor }]}>
-            <View style={styles.chatContainer}>
-                <GiftedChat
-                    messages={messages}
-                    renderBubble={renderBubble}
-                    renderInputToolbar={renderInputToolbar}
-                    renderDay={renderDay}
-                    renderSend={renderSend}
-                    renderActions={renderCustomActions}
-                    onSend={messages => onSend(messages)}
-                    user={{
-                        _id: userID,
-                    }}
-                    onLongPress={(context, message) => handleLongPress(message)}
-                    listViewProps={{
-                        style: {
-                            marginBottom: 20
-                        }
-                    }}
-                />
-            </View>
+            <GiftedChat
+                messages={messages}
+                renderBubble={renderBubble}
+                renderInputToolbar={renderInputToolbar}
+                renderDay={renderDay}
+                renderSend={renderSend}
+                onSend={messages => onSend(messages)}
+                renderActions={renderCustomActions}
+                renderMessageImage={renderMessageImage}
+                user={{
+                    _id: userID,
+                    name
+                }}
+                scrollToBottom
+                alwaysShowSend
+                renderAvatar={null}
+                listViewProps={{
+                    style: {
+                        marginBottom: 20
+                    }
+                }}
+            />
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        justifyContent: 'flex-end',
-    },
-    chatContainer: {
         flex: 1,
     },
     inputToolbar: {
@@ -367,18 +275,13 @@ const styles = StyleSheet.create({
         color: '#FFD700',
         fontWeight: '600',
     },
-    sendButtonContainer: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        alignSelf: 'flex-end',
-        marginRight: 10,
-        marginBottom: 5,
-    },
     sendButton: {
         justifyContent: 'center',
         alignItems: 'center',
-        height: 26,
-        width: 26,
+        height: 40,
+        width: 40,
+        marginRight: 5,
+        marginBottom: Platform.OS === 'ios' ? 0 : 5,
     },
     timeTextRight: {
         color: '#333333',
@@ -425,49 +328,19 @@ const styles = StyleSheet.create({
         color: '#D4AF37',
         fontSize: 12,
     },
-    selectedBubble: {
-        backgroundColor: 'rgba(255, 0, 0, 0.1)',
-    },
-    selectedImage: {
-        opacity: 0.7,
-    },
-    deletedBubbleRight: {
-        backgroundColor: "#FFDDDD",
-        borderRadius: 18,
-        padding: 12,
-        marginBottom: 8,
-        marginLeft: 60,
-    },
-    deletedBubbleLeft: {
-        backgroundColor: "#FFDDDD",
-        borderRadius: 18,
-        padding: 12,
-        marginBottom: 8,
-        marginRight: 60,
-    },
-    deletedTextRight: {
-        color: "#FF0000",
-        fontSize: 16,
-        textAlign: 'right',
-    },
-    deletedTextLeft: {
-        color: "#FF0000",
-        fontSize: 16,
-        textAlign: 'left',
-    },
-    deletedImageContainer: {
-        flexDirection: 'column',
-        marginBottom: 10,
-        alignItems: 'center',
+    sendButtonContainer: {
         justifyContent: 'center',
+        alignItems: 'center',
+        alignSelf: 'flex-end',
+        marginRight: 10,
+        marginBottom: 5,
     },
-    deletedImageText: {
-        color: '#FF0000',
-        fontSize: 16,
-        textAlign: 'center',
-        padding: 10,
+    sendButton: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: 26,
+        width: 26,
     },
 });
-
 
 export default Chat;
